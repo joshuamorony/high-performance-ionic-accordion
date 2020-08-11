@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+.blocker {
+  background-color: #fff;
+  height: 50px;
+  will-change: transform;
+}
