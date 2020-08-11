@@ -1,4 +1,4 @@
-import { Component, Listen, Element, writeTask, h } from '@stencil/core';
+import { Component, Listen, Element, h } from '@stencil/core';
 import { createAnimation, Animation } from '@ionic/core';
 
 @Component({
@@ -62,35 +62,10 @@ export class MyAccordionGroup {
 
     // Calculate the amount other items need to be shifted
     const amountToShift = ev.detail.content.clientHeight;
-
-    // Shift all of the elements below the item being opened up so that the content that was just
-    // made visible, is hidden by the elements below it
-    /*this.elementsToShift.forEach(element => {
-      writeTask(() => {
-        element.style.transition = '';
-        element.style.transform = `translateY(-${amountToShift}px)`;
-
-        // Required to display these elements on top of the blocker, but keep the blocker above
-        // the content of the item being revealed
-        element.style.position = `relative`;
-        element.style.zIndex = `1`;
-      });
-    });*/
-
-    // Position the blocker element so that the content does not leak out the bottom of the accordion group
-    /*writeTask(() => {
-      this.blocker.style.transition = '';
-      this.blocker.style.height = `${amountToShift}px`;
-      this.blocker.style.transform = `translateY(-${amountToShift}px)`;
-    });*/
-
-    // Wait for DOM updates
-    //await new Promise(resolve => setTimeout(resolve, 20));
-
-    // Now remove the transforms so that the shifted elements animate back to their normal position, revealing the
-    // new content with an animation
     const openAnimationTime = 300;
 
+    // Initially set all items below the one being opened to cover the new content
+    // but then animate back to their normal position to reveal the content
     this.shiftDownAnimation = createAnimation()
       .addElement(this.elementsToShift)
       .delay(20)
@@ -104,6 +79,9 @@ export class MyAccordionGroup {
       .duration(openAnimationTime)
       .easing('cubic-bezier(0.32,0.72,0,1)');
 
+    // This blocker element is placed after the last item in the accordion list
+    // It will change its height to the height of the content being displayed so that
+    // the content doesn't leak out the bottom of the list
     this.blockerDownAnimation = createAnimation()
       .addElement(this.blocker)
       .delay(20)
@@ -115,31 +93,7 @@ export class MyAccordionGroup {
       .duration(openAnimationTime)
       .easing('cubic-bezier(0.32,0.72,0,1)');
 
-    await Promise.all([this.shiftDownAnimation.play(), this.blockerDownAnimation.play()]);
-    /*this.elementsToShift.forEach(element => {
-      writeTask(() => {
-        element.style.transition = `transform ${openAnimationTime}ms cubic-bezier(0.32,0.72,0,1)`;
-        element.style.transform = 'translateY(0)';
-      });
-    });*/
-
-    /*writeTask(() => {
-      this.blocker.style.transition = `transform ${openAnimationTime}ms cubic-bezier(0.32,0.72,0,1)`;
-      this.blocker.style.transform = 'translateY(0)';
-    });*/
-
-    // Wait for animation to finish
-    //await new Promise(resolve => setTimeout(resolve, openAnimationTime));
-
-    // Reset z-index and position
-    /*this.elementsToShift.forEach(element => {
-      writeTask(() => {
-        element.style.position = '';
-        element.style.zIndex = '';
-      });
-    });*/
-
-    return true;
+    return await Promise.all([this.shiftDownAnimation.play(), this.blockerDownAnimation.play()]);
   }
 
   async animateClose(ev) {
@@ -148,6 +102,9 @@ export class MyAccordionGroup {
 
     const closeAnimationTime = 300;
 
+    // Now we first animate up the elements beneath the content that was opened to cover it
+    // and then we set the content back to display: none and remove the transform completely
+    // With the content gone, there will be no noticeable position change when removing the transform
     const shiftUpAnimation: Animation = createAnimation()
       .addElement(this.elementsToShift)
       .afterStyles({
@@ -176,39 +133,6 @@ export class MyAccordionGroup {
 
     shiftUpAnimation.destroy();
     blockerUpAnimation.destroy();
-
-    // Animate elements up to hide the content that is currently displayed
-    /*this.elementsToShift.forEach(element => {
-      writeTask(() => {
-        element.style.transition = `transform ${closeAnimationTime}ms cubic-bezier(0.32,0.72,0,1)`;
-        element.style.transform = `translateY(-${amountToShift}px)`;
-      });
-    });
-
-    writeTask(() => {
-      this.blocker.style.transition = `transform ${closeAnimationTime}ms cubic-bezier(0.32,0.72,0,1)`;
-      this.blocker.style.transform = `translateY(-${amountToShift}px)`;
-    });*/
-
-    // Wait for animation to complete
-    //await new Promise(resolve => setTimeout(resolve, closeAnimationTime));
-
-    // Hide the content of the item being closed
-    //ev.detail.content.style.display = 'none';
-
-    // Remove transforms (the items will remain in the same position, since their resting position is now the same
-    // as the transformed position because the content has been set to display: none)
-    /*this.elementsToShift.forEach(element => {
-      writeTask(() => {
-        element.style.transition = '';
-        element.style.transform = `translateY(0)`;
-      });
-    });*/
-
-    /*writeTask(() => {
-      this.blocker.style.transition = '';
-      this.blocker.style.transform = `translateY(0)`;
-    });*/
 
     return true;
   }
